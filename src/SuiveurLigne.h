@@ -1,5 +1,0 @@
-// SuiveurLigne.h - Christopher Plantevin
-
-
-
-
