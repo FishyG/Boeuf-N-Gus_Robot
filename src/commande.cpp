@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include "commande.h"
-#include "ingredients.h"
-
+#include "..\lib\commande.h"
+#include "..\lib\ingredients.h"
 
 static int UID_comparer(const char *a, const char *b) {
 
@@ -14,11 +12,19 @@ static int UID_comparer(const char *a, const char *b) {
     }
     return a[i] == b[i];
 }
-
+static int trouver_taille(const struct Chef *chef_actuel, int taille_max){
+	int taille=0;
+	for ( int i=0; i< taille_max; i++){
+		if (chef_actuel->recette[i] != 0){
+			taille++;
+		}
+	}
+	return taille;
+}
 void trouver_chef(const char *UID_scanne, const struct Chef chefs[],
                   struct Chef *chef_actuel) {
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < NOMBRE_CHEFS; i++) {
         if (UID_comparer(chefs[i].tag_1, UID_scanne) ||
             UID_comparer(chefs[i].tag_2, UID_scanne)) {
             *chef_actuel = chefs[i];
@@ -28,8 +34,8 @@ void trouver_chef(const char *UID_scanne, const struct Chef chefs[],
 }
 
 void extraire_ingredients(const struct Chef *chef_actuel, int ingredients[8]) {
-
-    for (int i = 0; i < TAILLE_RECETTE; i++) {
-        ingredients[i] = chef_actuel->recette[TAILLE_RECETTE - 1 - i];
+    int taille_actuelle = trouver_taille(chef_actuel, INGREDIENTS_MAX);
+    for (int i = 0; i < taille_actuelle; i++) {
+        ingredients[i] = chef_actuel->recette[taille_actuelle - 1 - i];
     }
 }
