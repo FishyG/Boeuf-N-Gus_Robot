@@ -5,6 +5,7 @@
 void setupLCD(LiquidCrystal &ecran) {
   // Définir la taille de l'écran
   ecran.begin(16, 4);
+  ecrireEcran(OEIL_OUVERT, 0, ecran);
 
 }
 
@@ -39,8 +40,9 @@ void ecrireEcran(String msg, int ligne, LiquidCrystal &ecran) {
 }
 
 void oeilCligner(LiquidCrystal &ecran) {
+  unsigned long currentMillis = millis();
+
   ecrireEcran(OEIL_OUVERT, 0, ecran);
-  delay(3000);
 
   ecrireEcran(OEIL_MI_OUVERT, 0, ecran);
   delay(200);

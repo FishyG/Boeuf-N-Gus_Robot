@@ -18,6 +18,14 @@
 #define CARLOS [PAIN, FROMAGE, OIGNON, TOMATE, TOMATE, OIGNON, SALADE, PAIN_SOUS]
 #define SANDY [PAIN, FROMAGE, VIANDE, FROMAGE, VIANDE, FROMAGE, VIANDE, PAIN_SOUS]
 
+// Définir les tags
+//Partick : 1600BE42E8
+//Bob : 1600C3C98A
+// Sandy : 1600CA59E8
+//Plankton : 08003C1409
+// Carlos : 1600C255DD
+// Crab : 0E008E9C42
+
 // Structure de recette pour le projet--------------------------------------------------------
 struct Chef {
     char nom[20];   // Nom du personnage sur la carte
