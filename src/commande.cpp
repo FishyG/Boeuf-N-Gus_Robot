@@ -1,5 +1,5 @@
-#include "..\lib\commande.h"
-#include "..\lib\ingredients.h"
+#include "..\include\commande.h"
+#include "..\include\ingredients.h"
 
 static int UID_comparer(const char *a, const char *b) {
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "..\lib\ingredients.h"
+#include "..\include\ingredients.h"
 
 // ======= Module commande =======
 // Role : Reconnaitre chaque commandes a partir de l'adresse RFID et lister les ingredients
