@@ -39,22 +39,52 @@ void ecrireEcran(String msg, int ligne, LiquidCrystal &ecran) {
   }
 }
 
-void oeilCligner(LiquidCrystal &ecran) {
+static unsigned long previousMillis = 0;
+
+int intervalMillis(int interval) {
   unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis == interval) {
+    previousMillis = currentMillis;
+    return 1; // L'intervalle de temps est écoulé
+  }
+  return 0; // L'intervalle de temps n'est pas encore écoulé
+}
 
-  ecrireEcran(OEIL_OUVERT, 0, ecran);
+void oeilCligner(LiquidCrystal &ecran, int etape) {
 
-  ecrireEcran(OEIL_MI_OUVERT, 0, ecran);
-  delay(200);
 
-  ecrireEcran(OEIL_FERME, 0, ecran);
-  delay(500);
+  switch (etape) {
 
-  ecrireEcran(OEIL_MI_OUVERT, 0, ecran);
-  delay(200);
+    case 0:
+      if (intervalMillis(3000)) {
+      ecrireEcran(OEIL_MI_OUVERT, 0, ecran);
+      previousMillis = millis();
+      etape++;
+      }
+      break;
+    case 1:
+      if(intervalMillis(200)) {
+        ecrireEcran(OEIL_FERME, 0, ecran);
+        previousMillis = millis();
+        etape++;
+      }
+      break;
+    case 2:
+      if(intervalMillis(500)) {
+        ecrireEcran(OEIL_MI_OUVERT, 0, ecran);
+        previousMillis = millis();
+        etape++;
+      }
+      break;
+    case 3:
+    if(intervalMillis(200)) {
+        ecrireEcran(OEIL_OUVERT, 0, ecran);
+        previousMillis = millis();
+        etape = 0; // Réinitialiser l'étape pour recommencer le clignement
+      }
+      break;
+  }
 
-  ecrireEcran(OEIL_OUVERT, 0, ecran);
-  delay(3000);
 }
 
 void fermerOeil(LiquidCrystal &ecran) {
