@@ -43,3 +43,15 @@ enum EtatDel : uint8_t {
     DEL_PRET,
     DEL_ERREUR
 };
+
+// Noms pour les logs, a garder dans le meme ordre que les enums.
+inline const char* nom_couleur(Couleur c) {
+    static const char* const NOMS[] = {"AUCUNE", "ROUGE", "BLEU"};
+    return c < NB_COULEURS ? NOMS[c] : "?";
+}
+
+inline const char* nom_ingredient(Ingredient i) {
+    static const char* const NOMS[] = {"AUCUN",  "PAIN",   "PAIN_SOUS", "FROMAGE", "VIANDE",
+                                       "TOMATE", "OIGNON", "CORNICHON", "SALADE"};
+    return i < NB_INGREDIENTS ? NOMS[i] : "?";
+}

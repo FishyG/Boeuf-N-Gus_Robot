@@ -29,14 +29,9 @@ static unsigned long t_entree = 0;
 static Sens sens = SENS_AVANT;
 static Commande commande = {};
 static uint8_t nb_pris = 0;
-static Couleur couleur = COULEUR_AUCUNE;  // derniere couleur lue
-static const char* NOMS_COULEURS[] = {"AUCUNE", "ROUGE", "BLEU"};
 
-
-// TEMPORAIRE (Lyevan) : recette de Patrick, dans l'ordre de prise (du bas vers
-// le haut). 2 boulettes et 2 tomates : le robot doit revenir en arriere.
-static const Commande COMMANDE_DEMO = {
-    {ING_PAIN_SOUS, ING_TOMATE, ING_VIANDE, ING_TOMATE, ING_VIANDE, ING_FROMAGE, ING_PAIN}, 7};
+static const Commande COMMANDE_DEMO = {RECETTE_DEMO, NB_RECETTE_DEMO};  // TEMPORAIRE (Lyevan)
+static bool demo_faite = false;  // TEMPORAIRE : la demo ne roule qu'une fois
 
 static void changer_etat(Etat nouvel) {
     LOG(String("-> ") + NOMS_ETATS[nouvel]);
@@ -44,13 +39,8 @@ static void changer_etat(Etat nouvel) {
     t_entree = millis();
 }
 
-static const char* NOMS_INGREDIENTS[] = {"AUCUN", "PAIN", "PAIN_SOUS", "FROMAGE", "VIANDE",
-                                         "TOMATE", "OIGNON", "CORNICHON", "SALADE"};
-static bool demo_faite = false;  // TEMPORAIRE : la commande de demo ne roule qu'une fois
-
 #if LOG_DEBUG
 static void log_decision(Ingredient ing, ActionStation action) {
-    static const char* ACTIONS[] = {"PRENDRE", "LIVRER", "AVANCER", "RECULER", "ERREUR"};
     Serial.print("[decision] position ");
     Serial.print(arret_position());
     Serial.print("  pris ");
@@ -58,9 +48,9 @@ static void log_decision(Ingredient ing, ActionStation action) {
     Serial.print("/");
     Serial.print(commande.nb);
     Serial.print("  prochain ");
-    Serial.print(NOMS_INGREDIENTS[ing]);
+    Serial.print(nom_ingredient(ing));
     Serial.print("  -> ");
-    Serial.println(ACTIONS[action]);
+    Serial.println(arret_nom_action(action));
 }
 #endif
 
@@ -89,7 +79,7 @@ void etats_executer() {
             // TODO(Lyevan)    : if (commande_disponible()) { commande = commande_lire(); ... }
             if (!demo_faite && millis() - t_entree >= DELAI_COMMANDE_DEMO) {  // TEMPORAIRE
                 demo_faite = true;
-                commande = COMMANDE_DEMO;                       // TEMPORAIRE
+                commande = COMMANDE_DEMO;
                 nb_pris = 0;
                 changer_etat(DECISION);
             }
@@ -102,13 +92,13 @@ void etats_executer() {
 #endif
             switch (action) {
                 case ACTION_PRENDRE:
-                    LOG(String("*** BONNE STATION : prendre ") + NOMS_INGREDIENTS[prochain_ingredient()]);
-                    AX_BuzzerON(1000, 300);
+                    LOG(String("*** BONNE STATION : prendre ") + nom_ingredient(prochain_ingredient()));
+                    AX_BuzzerON(BIP_PRISE_FREQ, BIP_PRISE_DUREE);  // TEMPORAIRE (Christian)
                     changer_etat(PRISE_INGREDIENT);
                     break;
                 case ACTION_LIVRER:
                     LOG("*** CLIENT : burger livre");
-                    AX_BuzzerON(1500, 1000);
+                    AX_BuzzerON(BIP_LIVRE_FREQ, BIP_LIVRE_DUREE);  // TEMPORAIRE (Christian)
                     changer_etat(COMMANDE_PRETE);
                     break;
                 case ACTION_AVANCER:
@@ -125,7 +115,7 @@ void etats_executer() {
             break;
         }
 
-        case DEPLACEMENT:
+        case DEPLACEMENT: {
             // TODO(Christian)   : del_afficher(DEL_EN_ROUTE);
             suiveur_suivre(sens, sens == SENS_AVANT ? VITESSE_BASE : VITESSE_RECUL);
             if (suiveur_ligne_perdue()) {
@@ -136,14 +126,15 @@ void etats_executer() {
 #if STUB_COULEUR
             couleur_stub_sens(sens);  // le faux capteur "roule" dans le meme sens
 #endif
-            couleur = couleur_lire();
+            Couleur couleur = couleur_lire();
             if (arret_nouvelle_station(couleur, sens)) {
                 suiveur_arreter();
-                LOG(String(">>> ARRET sur ") + NOMS_COULEURS[couleur] + ", position " + (int)arret_position());
+                LOG(String(">>> ARRET sur ") + nom_couleur(couleur) + ", position " + (int)arret_position());
                 arret_demarrer();
                 changer_etat(ARRET_STATION);
             }
             break;
+        }
 
         case ARRET_STATION:
             if (arret_termine()) changer_etat(DECISION);

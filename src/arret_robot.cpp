@@ -40,6 +40,8 @@ void arret_init() {
     t_arret = 0;
     dernier_sens = SENS_AVANT;
     ignorer_ruban_quitte = false;
+    vu_aucune = false;
+    vu_ruban = false;
 }
 
 // true : la lecture concerne le ruban quitte, elle ne compte pas.
@@ -103,4 +105,9 @@ ActionStation arret_decider(Ingredient prochain) {
 
 int8_t arret_position() {
     return position;
+}
+
+const char* arret_nom_action(ActionStation a) {
+    static const char* const NOMS[] = {"PRENDRE", "LIVRER", "AVANCER", "RECULER", "ERREUR"};
+    return a <= ACTION_ERREUR ? NOMS[a] : "?";
 }

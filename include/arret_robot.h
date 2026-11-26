@@ -27,3 +27,6 @@ bool arret_termine();
 ActionStation arret_decider(Ingredient prochain);
 
 int8_t arret_position();
+
+// Nom de l'action, pour les logs.
+const char* arret_nom_action(ActionStation a);

@@ -4,6 +4,8 @@
 // =============================================================================
 // Stubs : 1 = fausse version, 0 = vrai materiel
 // =============================================================================
+// Chaque responsable ajoute ICI le drapeau de son module (STUB_COMMANDE,
+// STUB_INGREDIENTS, STUB_DEL). platformio.ini peut les forcer (d'ou les #ifndef).
 #ifndef STUB_COULEUR
 #define STUB_COULEUR 0 
 #endif
@@ -58,6 +60,12 @@
 #endif
 #define DUREE_AFFICHAGE_PRET 3000UL
 
+// Bips (TEMPORAIRE : en attendant les DEL de Christian)
+#define BIP_PRISE_FREQ       1000  // Hz, bonne station
+#define BIP_PRISE_DUREE      300   // ms
+#define BIP_LIVRE_FREQ       1500  // Hz, burger livre au client
+#define BIP_LIVRE_DUREE      1000  // ms
+
 // Suiveur de ligne
 #define SEUIL_LIGNE          400     // analogRead > 400 : le capteur voit la ligne
 #define GAIN_SUIVEUR         1.0f    // force de la correction (plus haut = tourne plus fort)
@@ -68,9 +76,14 @@
 #define GAIN_RECUL_LIGNE     1.0f    // ramene vers la ligne (0 = encodeurs seulement)
 
 // =============================================================================
+// Capteur de couleur TCS34725
+// =============================================================================
+#define COULEUR_INTEGRATION   TCS34725_INTEGRATIONTIME_24MS  // une lecture = ~24 ms
+#define COULEUR_GAIN          TCS34725_GAIN_60X
+
 // Reference mesuree au demarrage par couleur_init() : la surface sous le robot
 // (le plancher, avant la 1re station). Rien a calibrer a la main.
-#define NB_MESURES_REFERENCE  10 
+#define NB_MESURES_REFERENCE  10
 
 // Valeurs divisees par la reference : 1.0 = autant que le plancher.
 #define RAPPORT_MIN     1.10f  // ROUGE si rouge/bleu >= 1.10, BLEU si bleu/rouge >= 1.10
@@ -82,9 +95,18 @@
 // =============================================================================
 #define STUB_DUREE_SEGMENT   1500UL
 #define STUB_LARGEUR_STATION 300UL
-#define DELAI_COMMANDE_DEMO  2000UL
+
+// =============================================================================
+// Demo (TEMPORAIRE : en attendant les modules commande et ingredients de Lyevan)
+// =============================================================================
+// Recette de Patrick, dans l'ordre de prise (du bas vers le haut).
+// 2 boulettes et 2 tomates : le robot doit revenir en arriere.
+#define RECETTE_DEMO \
+    {ING_PAIN_SOUS, ING_TOMATE, ING_VIANDE, ING_TOMATE, ING_VIANDE, ING_FROMAGE, ING_PAIN}
+#define NB_RECETTE_DEMO      7
+#define DELAI_COMMANDE_DEMO  2000UL   // ms avant de lancer la demo
 #ifndef DUREE_PRISE_DEMO
-#define DUREE_PRISE_DEMO     3000UL   // ms sur une bonne station, en attendant ingredients
+#define DUREE_PRISE_DEMO     3000UL   // ms sur une bonne station
 #endif
 
 #ifndef LOG_ACTIF

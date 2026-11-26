@@ -64,7 +64,11 @@ bool couleur_mesurer(MesureCouleur& m) {
 #include <Adafruit_TCS34725.h>
 #include <Wire.h>
 
-static Adafruit_TCS34725 capteur(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_60X);
+static const uint8_t NB_ESSAIS_DEMARRAGE = 5;        // le capteur repond parfois en retard
+static const unsigned long PAUSE_ESSAI = 50;          // ms entre deux essais
+static const uint8_t NB_LECTURES_JETEES = 3;          // lectures incompletes apres le demarrage
+
+static Adafruit_TCS34725 capteur(COULEUR_INTEGRATION, COULEUR_GAIN);
 
 static float ref_r = 1, ref_g = 1, ref_b = 1;  // plancher, mesure par couleur_init()
 
@@ -92,7 +96,7 @@ static Couleur filtrer(Couleur c) {
 }
 
 static void mesurer_reference() {
-    for (uint8_t i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < NB_LECTURES_JETEES; i++) {
         uint16_t mr, mg, mb, mc;
         capteur.getRawData(&mr, &mg, &mb, &mc);
     }
@@ -112,9 +116,9 @@ static void mesurer_reference() {
 
 void couleur_init() {
     bool trouve = false;
-    for (uint8_t essai = 0; essai < 5 && !trouve; essai++) {
+    for (uint8_t essai = 0; essai < NB_ESSAIS_DEMARRAGE && !trouve; essai++) {
         trouve = capteur.begin();
-        if (!trouve) delay(50);
+        if (!trouve) delay(PAUSE_ESSAI);  // permis : au demarrage seulement
     }
     if (trouve) {
         mesurer_reference();
@@ -137,7 +141,6 @@ bool couleur_mesurer(MesureCouleur& m) {
 
 #if LOG_DEBUG
 static void log_debug(const MesureCouleur& m, Couleur lue) {
-    static const char* NOMS[] = {"AUCUNE", "ROUGE", "BLEU"};
     static unsigned long t = 0;
     static Couleur stable_avant = COULEUR_AUCUNE;
     if (stable == stable_avant && millis() - t < PERIODE_LOG_DEBUG) return;
@@ -152,9 +155,9 @@ static void log_debug(const MesureCouleur& m, Couleur lue) {
     Serial.print("  r/b ");
     Serial.print(m.rouge / m.bleu);
     Serial.print("  lue ");
-    Serial.print(NOMS[lue]);
+    Serial.print(nom_couleur(lue));
     Serial.print("  stable ");
-    Serial.println(NOMS[stable]);
+    Serial.println(nom_couleur(stable));
 }
 #endif
 
