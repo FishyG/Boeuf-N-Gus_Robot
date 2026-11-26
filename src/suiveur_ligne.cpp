@@ -24,6 +24,11 @@ bool suiveur_ligne_perdue() { return false; }
 // =============================================================================
 static float derniere_correction = 0;  // > 0 : tournait a gauche
 static unsigned long t_ligne_vue = 0;
+
+float vitesse_pi;
+float acceleration_pi;
+
+
 static bool en_route = false;          // false : arrete, le chrono "perdue" repart
 
 static void moteurs(float gauche, float droite) {
@@ -93,8 +98,31 @@ void suiveur_suivre(Sens sens, float vitesse) {
 #endif
 }
 
-void suiveur_arreter() {
+void suiveur_arreter(){
+
+    int temps;
+
+    vitesse_pi = VITESSE_BASE;
+    
+    moteurs(vitesse_pi, vitesse_pi);
+
+    acceleration_pi = vitesse_pi / TEMPS_ARRET;
+
+    temps = TEMPS_ARRET;
+
+    while(temps != 0){
+        
+        delay(TEMPS_INTERVALLE / 1000)
+        vitesse_pi = vitesse_pi - acceleration_pi;
+
+        moteurs(vitesse_pi, vitesse_pi);
+
+        temps = temps - TEMPS_INTERVALLE;
+
+    }
+
     moteurs(0, 0);
+
     en_route = false;  // le temps a l'arret ne compte pas comme "perdue"
 }
 
