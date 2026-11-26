@@ -19,12 +19,21 @@
 
     // Variables pour le deplacement du robot
 
+        int acceleration_pi;
+        int vitesse_pi;
+
     // Variables pour la recherche de la ligne
         int Direction_Correction;
 
 
 // Fonctions
     // Section | Deplacement du Robot
+
+    void moteurs(float gauche,float droite){
+        MOTOR_SetSpeed(LEFT, gauche);
+        MOTOR_SetSpeed(RIGHT, droite);
+
+    }
 
     void Avancer(int distance){
 
@@ -38,24 +47,46 @@
         Serial.println(b);
         Serial.print("C: ");
         Serial.println(c);
+     
         Serial.println("");
 
+        
 
-        MOTOR_SetSpeed(LEFT, VITESSE_AVANT);
-        MOTOR_SetSpeed(RIGHT, VITESSE_AVANT);    
+        moteurs(VITESSE_AVANT, VITESSE_AVANT);
         
     }
 
     void Reculer(int distance){
     
-        MOTOR_SetSpeed(LEFT, -VITESSE_ARRIERE);
-        MOTOR_SetSpeed(RIGHT, -VITESSE_ARRIERE);
+        moteurs( -VITESSE_ARRIERE, -VITESSE_ARRIERE);
     
     }
 
     void Arret(){
-        MOTOR_SetSpeed(LEFT, 0);
-        MOTOR_SetSpeed(RIGHT, 0);
+
+        int temps;
+
+        vitesse_pi = VITESSE_AVANT;
+    
+        moteurs(vitesse_pi, vitesse_pi);
+
+        acceleration_pi = vitesse_pi / TEMPS_ARRET;
+
+        temps = TEMPS_ARRET;
+
+        while(temps != 0){
+        
+            delay(TEMPS_INTERVALLE / 1000);
+            vitesse_pi = vitesse_pi - acceleration_pi;
+
+            moteurs(vitesse_pi, vitesse_pi);
+
+            temps = temps - TEMPS_INTERVALLE;
+
+        }
+        
+        moteurs(0, 0);
+    
     }
 
     void Tourner(int angle){
@@ -70,13 +101,11 @@
     void Recherche_Ligne(){
         if (Direction_Correction == 1){ // Correction à Gauche
 
-        MOTOR_SetSpeed(LEFT, VITESSE_CORRECTION_DROITE*force_correction);
-        MOTOR_SetSpeed(RIGHT, 0.05);
+        moteurs(VITESSE_CORRECTION_DROITE*force_correction, 0.05);
 
         } else if(Direction_Correction == 2) { // Correction à Droite
 
-        MOTOR_SetSpeed(RIGHT, VITESSE_CORRECTION_DROITE*force_correction);
-        MOTOR_SetSpeed(LEFT, 0.05);
+        moteurs(0.05, VITESSE_CORRECTION_DROITE*force_correction);
 
         } 
     }
@@ -109,8 +138,7 @@
         Serial.println(force_correction);
         Serial.print("");
 
-        MOTOR_SetSpeed(RIGHT, VITESSE_CORRECTION_DROITE*force_correction);
-        MOTOR_SetSpeed(LEFT, 0.05);
+        moteurs(0.05, VITESSE_CORRECTION_DROITE*force_correction);
 
     }
 
@@ -139,8 +167,7 @@
         Serial.println(force_correction);
         Serial.print("");
         
-        MOTOR_SetSpeed(LEFT, VITESSE_CORRECTION_GAUCHE*force_correction);
-        MOTOR_SetSpeed(RIGHT, 0.05);
+        moteurs( VITESSE_CORRECTION_DROITE*force_correction, 0.05);
     
     }   
 
