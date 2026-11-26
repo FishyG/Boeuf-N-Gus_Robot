@@ -1,0 +1,95 @@
+#pragma once
+#include "types.h"
+
+// =============================================================================
+// Stubs : 1 = fausse version, 0 = vrai materiel
+// =============================================================================
+// Valeurs pour [env:complet]. Quand ton vrai module marche, passe ton
+// drapeau a 0 dans ta pull request. Les environnements de platformio.ini
+// peuvent les forcer (d'ou les #ifndef).
+// Chaque responsable ajoute ICI le drapeau de son module, sur ce modele
+// (noms attendus : STUB_SUIVEUR, STUB_COMMANDE, STUB_INGREDIENTS, STUB_DEL).
+#ifndef STUB_COULEUR
+#define STUB_COULEUR 0 
+#endif
+
+// =============================================================================
+// Parcours (A CONFIRMER avec le vrai parcours)
+// =============================================================================
+// Une station par ingredient. Seulement 2 couleurs, en alternance : la
+// couleur ne dit pas OU est le robot, arret_robot COMPTE les stations.
+// L'alternance sert de verification (meme couleur 2 fois = station manquee).
+//
+//   position :  0      1       2        3       4       5       6          7
+//   couleur  :  ROUGE  BLEU    ROUGE    BLEU    ROUGE   BLEU    ROUGE      BLEU
+//   station  :  pains  viande  fromage  salade  tomate  oignon  cornichon  client
+#define NB_STATIONS        8
+#define POSITION_DEPART    -1  // -1 = le robot part AVANT la 1re station
+
+#define COULEUR_STATION_PAIRE    COULEUR_ROUGE  // positions 0, 2, 4, 6
+#define COULEUR_STATION_IMPAIRE  COULEUR_BLEU   // positions 1, 3, 5, 7
+#define COULEUR_STATION(pos)     ((pos) % 2 == 0 ? COULEUR_STATION_PAIRE : COULEUR_STATION_IMPAIRE)
+
+#define POS_PAIN       0
+#define POS_VIANDE     1
+#define POS_FROMAGE    2
+#define POS_SALADE     3
+#define POS_TOMATE     4
+#define POS_OIGNON     5
+#define POS_CORNICHON  6
+#define POS_CLIENT     7
+
+// =============================================================================
+// Broches (A AJUSTER selon le cablage)
+// =============================================================================
+// LibRobus utilise deja : IR 37, Serial2 (Bluetooth), Serial3 (audio).
+// Chaque responsable ajoute ICI les broches de son module (PIN_xxx).
+// Capteur de couleur TCS34725 : I2C (SDA 20, SCL 21), pas de broche a choisir.
+
+// =============================================================================
+// Reglages
+// =============================================================================
+#define VITESSE_BASE        0.3f
+#define VITESSE_RECUL       0.2f
+#define DUREE_ARRET         500UL
+#define DUREE_AFFICHAGE_PRET 3000UL
+
+// =============================================================================
+// Reference mesuree au demarrage par couleur_init() : la surface sous le robot
+// (le plancher, avant la 1re station). Rien a calibrer a la main.
+#define NB_MESURES_REFERENCE  10 
+
+// Valeurs divisees par la reference : 1.0 = autant que le plancher.
+#define RAPPORT_MIN     1.10f  // ROUGE si rouge/bleu >= 1.10, BLEU si bleu/rouge >= 1.10
+#define LUMINOSITE_MIN  0.10f  // plus sombre que 10 % du plancher : ligne noire ou rien
+#define LECTURES_ANTIREBOND   3     // lectures identiques de suite avant de changer de couleur
+
+// =============================================================================
+// Reglages des stubs
+// =============================================================================
+#define STUB_DUREE_SEGMENT   1500UL
+#define STUB_LARGEUR_STATION 300UL
+#define DELAI_COMMANDE_DEMO  2000UL
+
+#ifndef LOG_ACTIF
+#define LOG_ACTIF 1
+#endif
+
+#if LOG_ACTIF
+
+#define LOG(x) Serial.println(x)
+
+#define LOG_VAL(nom, val)    \
+    do {                     \
+        Serial.print(nom);   \
+        Serial.print(" = "); \
+        Serial.println(val); \
+    } while (0)
+#else
+#define LOG(x) \
+    do {       \
+    } while (0)
+#define LOG_VAL(nom, val) \
+    do {                  \
+    } while (0)
+#endif
