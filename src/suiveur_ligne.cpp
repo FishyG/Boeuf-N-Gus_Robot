@@ -112,7 +112,8 @@ void suiveur_arreter(){
 
     while(temps != 0){
         
-        delay(TEMPS_INTERVALLE / 1000)
+        delay(TEMPS_INTERVALLE / 1000);
+        
         vitesse_pi = vitesse_pi - acceleration_pi;
 
         moteurs(vitesse_pi, vitesse_pi);
