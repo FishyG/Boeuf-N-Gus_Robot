@@ -1,53 +1,36 @@
 #include "..\include\commande.h"
 #include <LibRobus.h>
 
-static int UID_comparer(const char *a, const char *b) {
+static int chef_actuel;
 
-    int i = 0;
-    while (a[i] != '\0' && b[i] != '\0') {
-        if (a[i] != b[i]) {
-            return 0;
+int trouver_chef(int commande) {
+
+    for (int i = 0; i <= NOMBRE_CHEFS; i++) {
+        if (commande-1 == i ) {
+            chef_actuel = i;
         }
-        i++;
     }
-    return a[i] == b[i];
+    return chef_actuel;
 }
-static int trouver_taille(const struct Chef *chef_actuel, int taille_max){
+static int trouver_taille(int taille_max){
 	int taille=0;
 	for ( int i=0; i< taille_max; i++){
-		if (chef_actuel->recette[i] != 0){
+		if (liste_chefs[chef_actuel][i] != 0){
 			taille++;
 		}
 	}
 	return taille;
 }
-void trouver_chef(const char *UID_scanne, const struct Chef chefs[],
-                  struct Chef *chef_actuel) {
 
-    for (int i = 0; i < NOMBRE_CHEFS; i++) {
-        if (UID_comparer(chefs[i].tag_1, UID_scanne) ||
-            UID_comparer(chefs[i].tag_2, UID_scanne)) {
-            *chef_actuel = chefs[i];
-            return;
-        }
-    }
-}
-/*
-void trouver_chef(const char *UID_scanne, const struct Chef chefs[],
-                  struct Chef *chef_actuel) {
-
-    for (int i = 0; i <= NOMBRE_CHEFS; i++) {
-        if (commande = ) {
-            *chef_actuel = chefs[i];
-            return;
-        }
-    }
-}
-*/
-void extraire_ingredients(const struct Chef *chef_actuel, int ingredients[8]) {
-    int taille_actuelle = trouver_taille(chef_actuel, INGREDIENTS_MAX);
+void extraire_ingredients(int chef_actuel, int ingredients[8]) {
+    int taille_actuelle = trouver_taille(INGREDIENTS_MAX);
     for (int i = 0; i < taille_actuelle; i++) {
-        ingredients[i] = chef_actuel->recette[taille_actuelle - 1 - i];
+        ingredients[i] = liste_chefs[chef_actuel][taille_actuelle - 1 - i];
+    }
+    for(int i =0; i<taille_actuelle;i++){
+		Serial.print(i + 1);
+        Serial.print(". ");
+        Serial.println(ingredients[i]);
     }
 }
 
