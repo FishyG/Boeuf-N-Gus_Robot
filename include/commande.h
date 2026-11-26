@@ -1,5 +1,8 @@
 #pragma once
 #include "..\include\ingredients.h"
+#include <arduino.h>
+
+const uint8_t ADRESSE_ATTENDUE = 0x17;
 
 // ======= Module commande =======
 // Role : Reconnaitre chaque commandes a partir de l'adresse RFID et lister les ingredients
