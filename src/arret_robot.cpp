@@ -4,56 +4,53 @@
 
 #include "config.h"
 
-static const Couleur STATIONS[NB_STATIONS] = STATIONS_EN_ORDRE;
 static const int8_t HORS_PARCOURS = -2;
 
-static Couleur derniere_station = COULEUR_AUCUNE;
+static Couleur derniere_couleur = COULEUR_AUCUNE;
 static int8_t position = POSITION_DEPART;
 static unsigned long t_arret = 0;
 
-static Couleur station_de(Ingredient ing) {
+static int8_t position_de(Ingredient ing) {
     switch (ing) {
-        case ING_PAIN:      return STATION_PAIN;
-        case ING_PAIN_SOUS: return STATION_PAIN_SOUS;
-        case ING_FROMAGE:   return STATION_FROMAGE;
-        case ING_VIANDE:    return STATION_VIANDE;
-        case ING_TOMATE:    return STATION_TOMATE;
-        case ING_OIGNON:    return STATION_OIGNON;
-        case ING_CORNICHON: return STATION_CORNICHON;
-        case ING_SALADE:    return STATION_SALADE;
-        default:            return COULEUR_AUCUNE;
+        case ING_PAIN:
+        case ING_PAIN_SOUS: return POS_PAIN;
+        case ING_VIANDE:    return POS_VIANDE;
+        case ING_FROMAGE:   return POS_FROMAGE;
+        case ING_SALADE:    return POS_SALADE;
+        case ING_TOMATE:    return POS_TOMATE;
+        case ING_OIGNON:    return POS_OIGNON;
+        case ING_CORNICHON: return POS_CORNICHON;
+        default:            return HORS_PARCOURS;
     }
 }
 
-static int8_t indice_de(Couleur c) {
-    for (int8_t i = 0; i < NB_STATIONS; i++) {
-        if (STATIONS[i] == c) return i;
-    }
-    return HORS_PARCOURS;
-}
-
-static ActionStation aller_vers(Couleur cible, ActionStation si_arrive) {
-    int8_t i_cible = indice_de(cible);
-    if (i_cible == HORS_PARCOURS) return ACTION_ERREUR;
-    if (i_cible == position) return si_arrive;
-    return i_cible > position ? ACTION_AVANCER : ACTION_RECULER;
+static ActionStation aller_vers(int8_t cible, ActionStation si_arrive) {
+    if (cible == HORS_PARCOURS) return ACTION_ERREUR;
+    if (cible == position) return si_arrive;
+    return cible > position ? ACTION_AVANCER : ACTION_RECULER;
 }
 
 void arret_init() {
-    derniere_station = COULEUR_AUCUNE;
+    derniere_couleur = COULEUR_AUCUNE;
     position = POSITION_DEPART;
     t_arret = 0;
 }
 
-bool arret_nouvelle_station(Couleur c) {
-    if (c == COULEUR_AUCUNE) {
-        derniere_station = COULEUR_AUCUNE;
+bool arret_nouvelle_station(Couleur c, Sens sens) {
+    if (c == COULEUR_AUCUNE) { 
+        derniere_couleur = COULEUR_AUCUNE;
         return false;
     }
-    if (c == derniere_station) return false;
-    derniere_station = c;
-    int8_t i = indice_de(c);
-    if (i != HORS_PARCOURS) position = i;
+    if (c == derniere_couleur) return false;
+    derniere_couleur = c;
+
+    int8_t pas = (sens == SENS_AVANT) ? 1 : -1;
+    position += pas;
+    if (c != COULEUR_STATION(position)) {
+        position += pas;
+        LOG("Station manquee : position corrigee");
+    }
+    position = constrain(position, 0, NB_STATIONS - 1);
     return true;
 }
 
@@ -66,8 +63,8 @@ bool arret_termine() {
 }
 
 ActionStation arret_decider(Ingredient prochain) {
-    if (prochain == ING_AUCUN) return aller_vers(STATION_CLIENT, ACTION_LIVRER);
-    return aller_vers(station_de(prochain), ACTION_PRENDRE);
+    if (prochain == ING_AUCUN) return aller_vers(POS_CLIENT, ACTION_LIVRER);
+    return aller_vers(position_de(prochain), ACTION_PRENDRE);
 }
 
 int8_t arret_position() {

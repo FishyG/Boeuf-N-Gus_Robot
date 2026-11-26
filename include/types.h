@@ -18,11 +18,7 @@ enum Ingredient : uint8_t {
 enum Couleur : uint8_t {
     COULEUR_AUCUNE = 0,
     COULEUR_ROUGE,
-    COULEUR_ORANGE,
-    COULEUR_JAUNE,
-    COULEUR_VERT,
     COULEUR_BLEU,
-    COULEUR_MAUVE,
     NB_COULEURS
 };
 

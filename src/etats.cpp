@@ -28,14 +28,35 @@ static unsigned long t_entree = 0;
 static Sens sens = SENS_AVANT;
 static Commande commande = {};
 static uint8_t nb_pris = 0;
+static Couleur couleur = COULEUR_AUCUNE;  // derniere couleur lue
+static const char* NOMS_COULEURS[] = {"AUCUNE", "ROUGE", "BLEU"};
 
 
-static const Commande COMMANDE_DEMO = {{ING_PAIN_SOUS, ING_OIGNON, ING_VIANDE, ING_TOMATE, ING_PAIN}, 5};
+// TEMPORAIRE (Lyevan) : recette de Patrick, dans l'ordre de prise (du bas vers
+// le haut). 2 boulettes et 2 tomates : le robot doit revenir en arriere.
+static const Commande COMMANDE_DEMO = {
+    {ING_PAIN_SOUS, ING_TOMATE, ING_VIANDE, ING_TOMATE, ING_VIANDE, ING_FROMAGE, ING_PAIN}, 7};
 
 static void changer_etat(Etat nouvel) {
     LOG(String("-> ") + NOMS_ETATS[nouvel]);
     etat = nouvel;
     t_entree = millis();
+}
+
+static void afficher_rgb() {
+#if !STUB_COULEUR
+    static unsigned long t = 0;
+    if (millis() - t < 250) return;
+    t = millis();
+    MesureCouleur m;
+    if (!couleur_mesurer(m)) {
+        LOG("Capteur muet : verifier le branchement I2C");
+        return;
+    }
+    LOG(String("RGB brut ") + m.r + " " + m.g + " " + m.b +
+        "  | / plancher " + String(m.rouge, 2) + " " + String(m.vert, 2) + " " + String(m.bleu, 2) +
+        "  | lue : " + NOMS_COULEURS[couleur]);
+#endif
 }
 
 static Ingredient prochain_ingredient() {
@@ -69,8 +90,16 @@ void etats_executer() {
             switch (arret_decider(prochain_ingredient())) {
                 case ACTION_PRENDRE: changer_etat(PRISE_INGREDIENT); break;
                 case ACTION_LIVRER:  changer_etat(COMMANDE_PRETE);   break;
-                case ACTION_AVANCER: sens = SENS_AVANT;   changer_etat(DEPLACEMENT); break;
-                case ACTION_RECULER: sens = SENS_ARRIERE; changer_etat(DEPLACEMENT); break;
+                case ACTION_AVANCER:
+                    sens = SENS_AVANT;
+                    LOG("TEMPORAIRE (pas de suiveur) : AVANCER jusqu'a la prochaine couleur");
+                    changer_etat(DEPLACEMENT);
+                    break;
+                case ACTION_RECULER:
+                    sens = SENS_ARRIERE;
+                    LOG("TEMPORAIRE (pas de suiveur) : RECULER jusqu'a la prochaine couleur");
+                    changer_etat(DEPLACEMENT);
+                    break;
                 case ACTION_ERREUR:  changer_etat(ERREUR); break;
             }
             break;
@@ -81,10 +110,13 @@ void etats_executer() {
 #if STUB_COULEUR
             couleur_stub_sens(sens);  // le faux capteur "roule" dans le meme sens
 #endif
-            if (arret_nouvelle_station(couleur_lire())) {
+            couleur = couleur_lire();
+            afficher_rgb();  // TEMPORAIRE
+            if (arret_nouvelle_station(couleur, sens)) {
                 // TODO(Christopher) : suiveur_arreter();
+                LOG(String(">>> ARRET sur ") + NOMS_COULEURS[couleur] +  // TEMPORAIRE : remplace suiveur_arreter()
+                    ", position " + (int)arret_position());
                 arret_demarrer();
-                LOG_VAL("Station", arret_position());
                 changer_etat(ARRET_STATION);
             }
             break;

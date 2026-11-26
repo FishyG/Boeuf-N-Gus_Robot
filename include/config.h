@@ -10,35 +10,34 @@
 // Chaque responsable ajoute ICI le drapeau de son module, sur ce modele
 // (noms attendus : STUB_SUIVEUR, STUB_COMMANDE, STUB_INGREDIENTS, STUB_DEL).
 #ifndef STUB_COULEUR
-#define STUB_COULEUR 1
+#define STUB_COULEUR 0 
 #endif
 
 // =============================================================================
 // Parcours (A CONFIRMER avec le vrai parcours)
 // =============================================================================
-// Ordre des stations le long de la ligne, dans le sens ou le robot avance.
-// Le parcours est une boucle (3 tournants, geres par suiveur_ligne).
-// Chaque couleur UNE seule fois : la couleur lue dit OU est le robot.
-// 6 couleurs : plusieurs ingredients partagent une station (ex. les 2 pains).
+// Une station par ingredient. Seulement 2 couleurs, en alternance : la
+// couleur ne dit pas OU est le robot, arret_robot COMPTE les stations.
+// L'alternance sert de verification (meme couleur 2 fois = station manquee).
 //
-//   [ROUGE]  [ORANGE]  [BLEU]     [VERT]      [JAUNE]   [MAUVE]
-//   pains    fromage   boulette   salade      tomate    client
-//                                 cornichon   oignon
-#define NB_STATIONS        6
-#define STATIONS_EN_ORDRE  {COULEUR_ROUGE, COULEUR_ORANGE, COULEUR_BLEU, \
-                            COULEUR_VERT, COULEUR_JAUNE, COULEUR_MAUVE}
+//   position :  0      1       2        3       4       5       6          7
+//   couleur  :  ROUGE  BLEU    ROUGE    BLEU    ROUGE   BLEU    ROUGE      BLEU
+//   station  :  pains  viande  fromage  salade  tomate  oignon  cornichon  client
+#define NB_STATIONS        8
 #define POSITION_DEPART    -1  // -1 = le robot part AVANT la 1re station
 
-// Station (couleur) de chaque ingredient
-#define STATION_PAIN       COULEUR_ROUGE
-#define STATION_PAIN_SOUS  COULEUR_ROUGE
-#define STATION_FROMAGE    COULEUR_ORANGE
-#define STATION_VIANDE     COULEUR_BLEU
-#define STATION_SALADE     COULEUR_VERT
-#define STATION_CORNICHON  COULEUR_VERT
-#define STATION_TOMATE     COULEUR_JAUNE
-#define STATION_OIGNON     COULEUR_JAUNE
-#define STATION_CLIENT     COULEUR_MAUVE
+#define COULEUR_STATION_PAIRE    COULEUR_ROUGE  // positions 0, 2, 4, 6
+#define COULEUR_STATION_IMPAIRE  COULEUR_BLEU   // positions 1, 3, 5, 7
+#define COULEUR_STATION(pos)     ((pos) % 2 == 0 ? COULEUR_STATION_PAIRE : COULEUR_STATION_IMPAIRE)
+
+#define POS_PAIN       0
+#define POS_VIANDE     1
+#define POS_FROMAGE    2
+#define POS_SALADE     3
+#define POS_TOMATE     4
+#define POS_OIGNON     5
+#define POS_CORNICHON  6
+#define POS_CLIENT     7
 
 // =============================================================================
 // Broches (A AJUSTER selon le cablage)
@@ -55,10 +54,15 @@
 #define DUREE_ARRET         500UL
 #define DUREE_AFFICHAGE_PRET 3000UL
 
+// =============================================================================
+// Reference mesuree au demarrage par couleur_init() : la surface sous le robot
+// (le plancher, avant la 1re station). Rien a calibrer a la main.
+#define NB_MESURES_REFERENCE  10 
 
-#define SEUIL_HAUT          600    
-#define SEUIL_BAS           200    
-#define LECTURES_ANTIREBOND 3
+// Valeurs divisees par la reference : 1.0 = autant que le plancher.
+#define RAPPORT_MIN     1.10f  // ROUGE si rouge/bleu >= 1.10, BLEU si bleu/rouge >= 1.10
+#define LUMINOSITE_MIN  0.10f  // plus sombre que 10 % du plancher : ligne noire ou rien
+#define LECTURES_ANTIREBOND   3     // lectures identiques de suite avant de changer de couleur
 
 // =============================================================================
 // Reglages des stubs
