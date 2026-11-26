@@ -75,6 +75,9 @@
 #define GAIN_RECUL_DROIT     0.0005f // encodeurs : garde le cap du depart
 #define GAIN_RECUL_LIGNE     1.0f    // ramene vers la ligne (0 = encodeurs seulement)
 
+#define TEMPS_ARRET 0.5f // temps d'arret
+#define TEMPS_INTERVALLE 0.01f // temps d'intervalle
+
 // =============================================================================
 // Capteur de couleur TCS34725
 // =============================================================================
