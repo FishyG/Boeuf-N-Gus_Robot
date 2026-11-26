@@ -7,6 +7,8 @@
 #include "config.h"
 #include "couleur.h"
 #include "suiveur_ligne.h"
+#include "movements.h"
+
 // TODO(Lyevan)      : #include "commande.h"
 // TODO(Lyevan)      : #include "ingredients.h"
 // TODO(Christian)   : #include "del_rgb.h"
@@ -66,6 +68,7 @@ void etats_init() {
     couleur_init();
     arret_init();
     suiveur_init();
+    movementsInit();
     // TODO(Lyevan)      : commande_init();
     // TODO(Lyevan)      : ingredients_init();
     // TODO(Christian)   : del_init();

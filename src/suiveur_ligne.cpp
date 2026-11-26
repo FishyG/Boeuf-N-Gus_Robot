@@ -1,4 +1,5 @@
 #include "suiveur_ligne.h"
+#include "movements.h"
 
 #include <LibRobus.h>
 
@@ -94,7 +95,8 @@ void suiveur_suivre(Sens sens, float vitesse) {
 }
 
 void suiveur_arreter() {
-    moteurs(0, 0);
+    //moteurs(0, 0);
+    movePulses(0,0);
     en_route = false;  // le temps a l'arret ne compte pas comme "perdue"
 }
 
