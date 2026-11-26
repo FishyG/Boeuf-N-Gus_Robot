@@ -18,3 +18,6 @@ void trouver_chef(const char *UID_scanne, const struct Chef chefs[],
 /* chef_actuel est la structure qui contient le chef scanne
 ingredients est la liste d'igredient (du bas au dessus) de la recette en cours */
 void extraire_ingredients(const struct Chef *chef_actuel, int ingredients[8]);
+
+
+int lireCommandeIR();

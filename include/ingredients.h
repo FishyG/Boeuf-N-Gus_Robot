@@ -1,3 +1,4 @@
+#pragma once
 // Définir les constantes
 #define INGREDIENTS_MAX 8
 #define NOMBRE_CHEFS 6

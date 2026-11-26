@@ -11,7 +11,7 @@ Inclure les librairies de functions que vous voulez utiliser
 **************************************************************************** */
 
 #include <LibRobus.h>  // Pour utiliser RobUS
-#include "commande.cpp"
+#include "../include/commande.h"
 
 
 void setup() {
