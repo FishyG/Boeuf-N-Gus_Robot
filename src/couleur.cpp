@@ -135,9 +135,36 @@ bool couleur_mesurer(MesureCouleur& m) {
     return c > 0;
 }
 
+#if LOG_DEBUG
+static void log_debug(const MesureCouleur& m, Couleur lue) {
+    static const char* NOMS[] = {"AUCUNE", "ROUGE", "BLEU"};
+    static unsigned long t = 0;
+    static Couleur stable_avant = COULEUR_AUCUNE;
+    if (stable == stable_avant && millis() - t < PERIODE_LOG_DEBUG) return;
+    t = millis();
+    stable_avant = stable;
+    Serial.print("[couleur] RGB ");
+    Serial.print(m.r);
+    Serial.print(" ");
+    Serial.print(m.g);
+    Serial.print(" ");
+    Serial.print(m.b);
+    Serial.print("  r/b ");
+    Serial.print(m.rouge / m.bleu);
+    Serial.print("  lue ");
+    Serial.print(NOMS[lue]);
+    Serial.print("  stable ");
+    Serial.println(NOMS[stable]);
+}
+#endif
+
 Couleur couleur_lire() {
     MesureCouleur m;
     Couleur c = couleur_mesurer(m) ? classer(m) : COULEUR_AUCUNE;
-    return filtrer(c);
+    filtrer(c);
+#if LOG_DEBUG
+    log_debug(m, c);
+#endif
+    return stable;
 }
 #endif

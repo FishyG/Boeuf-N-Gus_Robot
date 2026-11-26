@@ -1,11 +1,12 @@
 #include "etats.h"
 
 #include <Arduino.h>
+#include <LibRobus.h>
 
 #include "arret_robot.h"
 #include "config.h"
 #include "couleur.h"
-// TODO(Christopher) : #include "suiveur_ligne.h"
+#include "suiveur_ligne.h"
 // TODO(Lyevan)      : #include "commande.h"
 // TODO(Lyevan)      : #include "ingredients.h"
 // TODO(Christian)   : #include "del_rgb.h"
@@ -43,31 +44,38 @@ static void changer_etat(Etat nouvel) {
     t_entree = millis();
 }
 
-static void afficher_rgb() {
-#if !STUB_COULEUR
-    static unsigned long t = 0;
-    if (millis() - t < 250) return;
-    t = millis();
-    MesureCouleur m;
-    if (!couleur_mesurer(m)) {
-        LOG("Capteur muet : verifier le branchement I2C");
-        return;
-    }
-    LOG(String("RGB brut ") + m.r + " " + m.g + " " + m.b +
-        "  | / plancher " + String(m.rouge, 2) + " " + String(m.vert, 2) + " " + String(m.bleu, 2) +
-        "  | lue : " + NOMS_COULEURS[couleur]);
-#endif
+static const char* NOMS_INGREDIENTS[] = {"AUCUN", "PAIN", "PAIN_SOUS", "FROMAGE", "VIANDE",
+                                         "TOMATE", "OIGNON", "CORNICHON", "SALADE"};
+static bool demo_faite = false;  // TEMPORAIRE : la commande de demo ne roule qu'une fois
+
+#if LOG_DEBUG
+static void log_decision(Ingredient ing, ActionStation action) {
+    static const char* ACTIONS[] = {"PRENDRE", "LIVRER", "AVANCER", "RECULER", "ERREUR"};
+    Serial.print("[decision] position ");
+    Serial.print(arret_position());
+    Serial.print("  pris ");
+    Serial.print(nb_pris);
+    Serial.print("/");
+    Serial.print(commande.nb);
+    Serial.print("  prochain ");
+    Serial.print(NOMS_INGREDIENTS[ing]);
+    Serial.print("  -> ");
+    Serial.println(ACTIONS[action]);
 }
+#endif
 
 static Ingredient prochain_ingredient() {
     return nb_pris < commande.nb ? commande.liste[nb_pris] : ING_AUCUN;
 }
 
 void etats_init() {
+#if LOG_DEBUG
+    Serial.begin(BAUD_DEBUG);
+#endif
     // Chaque module s'initialise lui-meme, dans son propre fichier.
     couleur_init();
     arret_init();
-    // TODO(Christopher) : suiveur_init();
+    suiveur_init();
     // TODO(Lyevan)      : commande_init();
     // TODO(Lyevan)      : ingredients_init();
     // TODO(Christian)   : del_init();
@@ -79,43 +87,59 @@ void etats_executer() {
         case ATTENTE_COMMANDE:
             // TODO(Christian) : del_afficher(DEL_ATTENTE);
             // TODO(Lyevan)    : if (commande_disponible()) { commande = commande_lire(); ... }
-            if (millis() - t_entree >= DELAI_COMMANDE_DEMO) {  // TEMPORAIRE
+            if (!demo_faite && millis() - t_entree >= DELAI_COMMANDE_DEMO) {  // TEMPORAIRE
+                demo_faite = true;
                 commande = COMMANDE_DEMO;                       // TEMPORAIRE
                 nb_pris = 0;
                 changer_etat(DECISION);
             }
             break;
 
-        case DECISION:
-            switch (arret_decider(prochain_ingredient())) {
-                case ACTION_PRENDRE: changer_etat(PRISE_INGREDIENT); break;
-                case ACTION_LIVRER:  changer_etat(COMMANDE_PRETE);   break;
+        case DECISION: {
+            ActionStation action = arret_decider(prochain_ingredient());
+#if LOG_DEBUG
+            log_decision(prochain_ingredient(), action);
+#endif
+            switch (action) {
+                case ACTION_PRENDRE:
+                    LOG(String("*** BONNE STATION : prendre ") + NOMS_INGREDIENTS[prochain_ingredient()]);
+                    AX_BuzzerON(1000, 300);
+                    changer_etat(PRISE_INGREDIENT);
+                    break;
+                case ACTION_LIVRER:
+                    LOG("*** CLIENT : burger livre");
+                    AX_BuzzerON(1500, 1000);
+                    changer_etat(COMMANDE_PRETE);
+                    break;
                 case ACTION_AVANCER:
                     sens = SENS_AVANT;
-                    LOG("TEMPORAIRE (pas de suiveur) : AVANCER jusqu'a la prochaine couleur");
                     changer_etat(DEPLACEMENT);
                     break;
                 case ACTION_RECULER:
                     sens = SENS_ARRIERE;
-                    LOG("TEMPORAIRE (pas de suiveur) : RECULER jusqu'a la prochaine couleur");
+                    LOG("Marche arriere");
                     changer_etat(DEPLACEMENT);
                     break;
                 case ACTION_ERREUR:  changer_etat(ERREUR); break;
             }
             break;
+        }
 
         case DEPLACEMENT:
             // TODO(Christian)   : del_afficher(DEL_EN_ROUTE);
-            // TODO(Christopher) : suiveur_suivre(sens, sens == SENS_AVANT ? VITESSE_BASE : VITESSE_RECUL);
+            suiveur_suivre(sens, sens == SENS_AVANT ? VITESSE_BASE : VITESSE_RECUL);
+            if (suiveur_ligne_perdue()) {
+                LOG("Ligne perdue");
+                changer_etat(ERREUR);
+                break;
+            }
 #if STUB_COULEUR
             couleur_stub_sens(sens);  // le faux capteur "roule" dans le meme sens
 #endif
             couleur = couleur_lire();
-            afficher_rgb();  // TEMPORAIRE
             if (arret_nouvelle_station(couleur, sens)) {
-                // TODO(Christopher) : suiveur_arreter();
-                LOG(String(">>> ARRET sur ") + NOMS_COULEURS[couleur] +  // TEMPORAIRE : remplace suiveur_arreter()
-                    ", position " + (int)arret_position());
+                suiveur_arreter();
+                LOG(String(">>> ARRET sur ") + NOMS_COULEURS[couleur] + ", position " + (int)arret_position());
                 arret_demarrer();
                 changer_etat(ARRET_STATION);
             }
@@ -128,6 +152,7 @@ void etats_executer() {
         case PRISE_INGREDIENT:
             // TODO(Christian) : del_afficher(DEL_PRISE);
             // TODO(Lyevan)    : if (!ingredients_prendre(prochain_ingredient())) { changer_etat(ERREUR); break; }
+            if (millis() - t_entree < DUREE_PRISE_DEMO) break;  // TEMPORAIRE : pour bien voir
             nb_pris++;
             changer_etat(DECISION);  // le suivant est peut-etre a la meme station
             break;
@@ -139,7 +164,7 @@ void etats_executer() {
             break;
 
         case ERREUR:
-            // TODO(Christopher) : suiveur_arreter();
+            suiveur_arreter();
             // TODO(Christian)   : del_afficher(DEL_ERREUR);
             // A DECIDER : comment sortir d'une erreur.
             break;

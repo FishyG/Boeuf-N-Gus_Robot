@@ -4,13 +4,11 @@
 // =============================================================================
 // Stubs : 1 = fausse version, 0 = vrai materiel
 // =============================================================================
-// Valeurs pour [env:complet]. Quand ton vrai module marche, passe ton
-// drapeau a 0 dans ta pull request. Les environnements de platformio.ini
-// peuvent les forcer (d'ou les #ifndef).
-// Chaque responsable ajoute ICI le drapeau de son module, sur ce modele
-// (noms attendus : STUB_SUIVEUR, STUB_COMMANDE, STUB_INGREDIENTS, STUB_DEL).
 #ifndef STUB_COULEUR
 #define STUB_COULEUR 0 
+#endif
+#ifndef STUB_SUIVEUR
+#define STUB_SUIVEUR 0
 #endif
 
 // =============================================================================
@@ -45,14 +43,29 @@
 // LibRobus utilise deja : IR 37, Serial2 (Bluetooth), Serial3 (audio).
 // Chaque responsable ajoute ICI les broches de son module (PIN_xxx).
 // Capteur de couleur TCS34725 : I2C (SDA 20, SCL 21), pas de broche a choisir.
+// Suiveur de ligne : 3 capteurs analogiques, vus de dessus robot vers l'avant.
+#define PIN_LIGNE_GAUCHE  A1
+#define PIN_LIGNE_CENTRE  A2
+#define PIN_LIGNE_DROITE  A3
 
 // =============================================================================
 // Reglages
 // =============================================================================
-#define VITESSE_BASE        0.3f
-#define VITESSE_RECUL       0.2f
-#define DUREE_ARRET         500UL
+#define VITESSE_BASE        0.2f
+#define VITESSE_RECUL       0.15f
+#ifndef DUREE_ARRET
+#define DUREE_ARRET         500UL   // ms d'arret a chaque station
+#endif
 #define DUREE_AFFICHAGE_PRET 3000UL
+
+// Suiveur de ligne
+#define SEUIL_LIGNE          400     // analogRead > 400 : le capteur voit la ligne
+#define GAIN_SUIVEUR         1.0f    // force de la correction (plus haut = tourne plus fort)
+#define DUREE_LIGNE_PERDUE   2000UL  // ms sans voir la ligne : ERREUR
+#define DELAI_RECHERCHE_LIGNE 500UL  // ms tout droit avant de chercher (ruban sur la ligne)
+// Marche arriere en ligne droite
+#define GAIN_RECUL_DROIT     0.0005f // encodeurs : garde le cap du depart
+#define GAIN_RECUL_LIGNE     1.0f    // ramene vers la ligne (0 = encodeurs seulement)
 
 // =============================================================================
 // Reference mesuree au demarrage par couleur_init() : la surface sous le robot
@@ -70,10 +83,20 @@
 #define STUB_DUREE_SEGMENT   1500UL
 #define STUB_LARGEUR_STATION 300UL
 #define DELAI_COMMANDE_DEMO  2000UL
+#ifndef DUREE_PRISE_DEMO
+#define DUREE_PRISE_DEMO     3000UL   // ms sur une bonne station, en attendant ingredients
+#endif
 
 #ifndef LOG_ACTIF
 #define LOG_ACTIF 1
 #endif
+
+// Logs detailles (env complet_debug) : capteurs, moteurs et decisions, 5 fois/s.
+#ifndef LOG_DEBUG
+#define LOG_DEBUG 0
+#endif
+#define PERIODE_LOG_DEBUG  200UL
+#define BAUD_DEBUG         115200  // 9600 est trop lent : les logs ralentiraient le robot
 
 #if LOG_ACTIF
 

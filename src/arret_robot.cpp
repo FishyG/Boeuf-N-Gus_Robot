@@ -9,6 +9,10 @@ static const int8_t HORS_PARCOURS = -2;
 static Couleur derniere_couleur = COULEUR_AUCUNE;
 static int8_t position = POSITION_DEPART;
 static unsigned long t_arret = 0;
+static Sens dernier_sens = SENS_AVANT;
+static bool ignorer_ruban_quitte = false;
+static bool vu_aucune = false;
+static bool vu_ruban = false;
 
 static int8_t position_de(Ingredient ing) {
     switch (ing) {
@@ -34,11 +38,41 @@ void arret_init() {
     derniere_couleur = COULEUR_AUCUNE;
     position = POSITION_DEPART;
     t_arret = 0;
+    dernier_sens = SENS_AVANT;
+    ignorer_ruban_quitte = false;
+}
+
+// true : la lecture concerne le ruban quitte, elle ne compte pas.
+static bool ruban_quitte(Couleur c) {
+    if (!ignorer_ruban_quitte || position < 0) return false;
+    if (c == COULEUR_AUCUNE) {
+        if (vu_ruban) ignorer_ruban_quitte = false;  // traverse au complet
+        vu_aucune = true;
+        return false;
+    }
+    if (c == COULEUR_STATION(position)) {
+        if (vu_aucune && !vu_ruban) LOG("Ruban de la station quittee : ignore");
+        if (vu_aucune) vu_ruban = true;
+        return true;
+    }
+    ignorer_ruban_quitte = false;  // autre couleur : la station suivante
+    return false;
 }
 
 bool arret_nouvelle_station(Couleur c, Sens sens) {
-    if (c == COULEUR_AUCUNE) { 
+    if (sens != dernier_sens) {
+        dernier_sens = sens;
+        ignorer_ruban_quitte = true;
+        vu_aucune = false;
+        vu_ruban = false;
+    }
+    bool ignore = ruban_quitte(c);
+    if (c == COULEUR_AUCUNE) {
         derniere_couleur = COULEUR_AUCUNE;
+        return false;
+    }
+    if (ignore) {
+        derniere_couleur = c;
         return false;
     }
     if (c == derniere_couleur) return false;
